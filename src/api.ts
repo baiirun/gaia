@@ -2,6 +2,7 @@ import { HttpApi, HttpApiBuilder } from "@effect/platform";
 import { healthGroup } from "./health";
 import { Effect, Layer } from "effect";
 import { ipfsGroup } from "./ipfs";
+import { Environment } from "./config";
 
 export const Api = HttpApi.make("gaia").add(healthGroup).add(ipfsGroup);
 
@@ -45,29 +46,39 @@ function upload(formData: FormData, url: string) {
 }
 
 const ipfsGroupLive = HttpApiBuilder.group(Api, "ipfs", (handlers) => {
-  // @ts-expect-error Error mismatch
-  return handlers.handle("uploadBinary", ({ payload }) => {
-    return Effect.gen(function* () {
-      const url = `https://node.lighthouse.storage/api/v0/add`;
+  return (
+    handlers
+      // @ts-expect-error Error mismatch
+      .handle("uploadBinary", ({ payload }) => {
+        return Effect.gen(function* () {
+          const config = yield* Environment;
+          const run = Effect.gen(function* () {
+            const blob = new Blob([payload.file], { type: "application/octet-stream" });
+            const formData = new FormData();
+            formData.append("file", blob);
 
-      const run = Effect.gen(function* () {
-        const blob = new Blob([payload.file], { type: "application/octet-stream" });
-        const formData = new FormData();
-        formData.append("file", blob);
+            const hash = yield* upload(formData, config.IPFS_GATEWAY_WRITE);
+            yield* Effect.logInfo(`Uploaded binary to IPFS successfully`).pipe(Effect.annotateLogs({ hash }));
+            return hash;
+          });
 
-        const hash = yield* upload(formData, url);
-        yield* Effect.logInfo(`Uploaded binary to IPFS successfully`).pipe(Effect.annotateLogs({ hash }));
-        return hash;
-      });
+          // @TODO: validate hash and retry
+          const hash = yield* run;
 
-      // @TODO: validate hash and retry
-      const hash = yield* run;
-
-      return {
-        cid: hash,
-      };
-    });
-  });
-});
+          return {
+            cid: hash,
+          };
+        });
+      })
+      .handle("get", ({ path: { cid } }) => {
+        return Effect.gen(function* () {
+          yield* Effect.logInfo(`cid: ${cid}`);
+          return {
+            cid,
+          };
+        });
+      })
+  );
+}).pipe(Layer.provide(Environment.Default));
 
 export const ApiLive = HttpApiBuilder.api(Api).pipe(Layer.provide(healthGroupLive), Layer.provide(ipfsGroupLive));

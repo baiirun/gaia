@@ -1,4 +1,4 @@
-import { HttpApiEndpoint, HttpApiGroup } from "@effect/platform";
+import { HttpApiEndpoint, HttpApiGroup, HttpApiSchema } from "@effect/platform";
 import { Schema } from "effect";
 
 const uploadBinary = HttpApiEndpoint.post("uploadBinary", "/ipfs/upload-binary")
@@ -13,4 +13,8 @@ const uploadBinary = HttpApiEndpoint.post("uploadBinary", "/ipfs/upload-binary")
     }),
   );
 
-export const ipfsGroup = HttpApiGroup.make("ipfs").add(uploadBinary);
+const getParam = HttpApiSchema.param("cid", Schema.String);
+
+const get = HttpApiEndpoint.get("get")`/ipfs/${getParam}`.addSuccess(Schema.Any);
+
+export const ipfsGroup = HttpApiGroup.make("ipfs").add(uploadBinary).add(get);
