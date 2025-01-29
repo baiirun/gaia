@@ -22,7 +22,8 @@ class IpfsParseResponseError extends Error {
 
 function upload(formData: FormData, url: string) {
   return Effect.gen(function* () {
-    yield* Effect.logInfo(`Posting IPFS content to url`, url);
+    yield* Effect.logInfo(`[IPFS] Posting IPFS content`);
+    const config = yield* Environment;
 
     const response = yield* Effect.tryPromise({
       try: () =>
@@ -30,7 +31,7 @@ function upload(formData: FormData, url: string) {
           method: "POST",
           body: formData,
           headers: {
-            Authorization: `Bearer ${process.env.IPFS_KEY}`,
+            Authorization: `Bearer ${config.IPFS_KEY}`,
           },
         }),
       catch: (error) => new IpfsUploadError(`IPFS upload failed: ${error}`),
@@ -56,11 +57,10 @@ const ipfsGroupLive = HttpApiBuilder.group(Api, "ipfs", (handlers) => {
           const formData = new FormData();
           formData.append("file", payload.file);
 
+          yield* Effect.logInfo(`[IPFS][upload] Uploading content...`);
           // @TODO: validate hash and retry
           const hash = yield* upload(formData, config.IPFS_GATEWAY_WRITE);
-          yield* Effect.logInfo(`[IPFS][upload] Uploaded file to IPFS successfully`).pipe(
-            Effect.annotateLogs({ hash }),
-          );
+          yield* Effect.logInfo(`[IPFS][upload] Uploaded to IPFS successfully`);
 
           return {
             cid: hash,
@@ -76,11 +76,10 @@ const ipfsGroupLive = HttpApiBuilder.group(Api, "ipfs", (handlers) => {
           const formData = new FormData();
           formData.append("file", blob);
 
+          yield* Effect.logInfo(`[IPFS][binary] Uploading content...`);
           // @TODO: validate hash and retry
           const hash = yield* upload(formData, config.IPFS_GATEWAY_WRITE);
-          yield* Effect.logInfo(`[IPFS][binary] Uploaded binary to IPFS successfully`).pipe(
-            Effect.annotateLogs({ hash }),
-          );
+          yield* Effect.logInfo(`[IPFS][binary] Uploaded to IPFS successfully`);
 
           return {
             cid: hash,
