@@ -49,36 +49,45 @@ const ipfsGroupLive = HttpApiBuilder.group(Api, "ipfs", (handlers) => {
   return (
     handlers
       // @ts-expect-error Error mismatch
-      .handle("uploadBinary", ({ payload }) => {
+      .handle("upload", ({ payload }) => {
         return Effect.gen(function* () {
           const config = yield* Environment;
-          const run = Effect.gen(function* () {
-            const blob = new Blob([payload.file], { type: "application/octet-stream" });
-            const formData = new FormData();
-            formData.append("file", blob);
 
-            const hash = yield* upload(formData, config.IPFS_GATEWAY_WRITE);
-            yield* Effect.logInfo(`Uploaded binary to IPFS successfully`).pipe(Effect.annotateLogs({ hash }));
-            return hash;
-          });
+          const formData = new FormData();
+          formData.append("file", payload.file);
 
           // @TODO: validate hash and retry
-          const hash = yield* run;
+          const hash = yield* upload(formData, config.IPFS_GATEWAY_WRITE);
+          yield* Effect.logInfo(`[IPFS][upload] Uploaded file to IPFS successfully`).pipe(
+            Effect.annotateLogs({ hash }),
+          );
 
           return {
             cid: hash,
           };
         });
       })
-      .handle("get", ({ path: { cid } }) => {
+      // @ts-expect-error Error mismatch
+      .handle("uploadEdit", ({ payload }) => {
         return Effect.gen(function* () {
-          yield* Effect.logInfo(`cid: ${cid}`);
+          const config = yield* Environment;
+
+          const blob = new Blob([payload.file], { type: "application/octet-stream" });
+          const formData = new FormData();
+          formData.append("file", blob);
+
+          // @TODO: validate hash and retry
+          const hash = yield* upload(formData, config.IPFS_GATEWAY_WRITE);
+          yield* Effect.logInfo(`[IPFS][binary] Uploaded binary to IPFS successfully`).pipe(
+            Effect.annotateLogs({ hash }),
+          );
+
           return {
-            cid,
+            cid: hash,
           };
         });
       })
   );
-}).pipe(Layer.provide(Environment.Default));
+});
 
-export const ApiLive = HttpApiBuilder.api(Api).pipe(Layer.provide(healthGroupLive), Layer.provide(ipfsGroupLive));
+export const ApiLive = HttpApiBuilder.api(Api).pipe(Layer.provide([healthGroupLive, ipfsGroupLive]));

@@ -1,7 +1,8 @@
 import { HttpApiBuilder, HttpApiSwagger, HttpMiddleware, HttpServer } from "@effect/platform";
 import { BunRuntime, BunHttpServer } from "@effect/platform-bun";
-import { Layer } from "effect";
+import { ConfigError, Layer } from "effect";
 import { ApiLive } from "./src/api";
+import { EnvironmentLive } from "./src/config";
 
 const ServerLive = HttpApiBuilder.serve(HttpMiddleware.logger).pipe(
   // Provide the Swagger layer so clients can access auto-generated docs
@@ -9,6 +10,7 @@ const ServerLive = HttpApiBuilder.serve(HttpMiddleware.logger).pipe(
   Layer.provide(ApiLive),
   HttpServer.withLogAddress,
   Layer.provide(BunHttpServer.layer({ port: 3000 })),
+  Layer.provide(EnvironmentLive),
 );
 
-Layer.launch(ServerLive).pipe(BunRuntime.runMain);
+BunRuntime.runMain(Layer.launch(ServerLive as Layer.Layer<never, ConfigError.ConfigError, never>));
