@@ -3,12 +3,9 @@ import {Ipfs} from "./src"
 import {Duration, Effect, Either, Schedule} from "effect"
 import {deploySpace} from "./src/deploy"
 import {EnvironmentLive} from "./src/config"
+import {getPublishEditCalldata} from "./src/calldata"
 
 const app = new Hono()
-
-app.get("/", (c) => {
-	return c.text("Hello World!")
-})
 
 app.get("/health", (c) => {
 	return c.json({healthy: true})
@@ -17,11 +14,8 @@ app.get("/health", (c) => {
 app.post("/ipfs/upload-edit", Ipfs.uploadEdit)
 app.post("/ipfs/upload-file", Ipfs.uploadFile)
 
-app.get("/space/deploy", async (c) => {
-	const url = new URL(c.req.url)
-
-	const initialEditorAddress = url.searchParams.get("initialEditorAddress")
-	const spaceName = url.searchParams.get("spaceName")
+app.post("/space/deploy", async (c) => {
+	const {initialEditorAddress, spaceName} = await c.req.json()
 
 	if (initialEditorAddress === null || spaceName === null) {
 		console.error(
@@ -92,4 +86,61 @@ app.get("/space/deploy", async (c) => {
 	})
 })
 
+app.post("/space/:spaceId/edit/calldata", async (c) => {
+	const {spaceId} = c.req.param()
+	const {cid} = await c.req.json()
+
+	if (!cid || !cid.startsWith("ipfs://")) {
+		return new Response(
+			JSON.stringify({
+				error: "Missing required parameters",
+				reason: "An IPFS CID prefixed with 'ipfs://' is required. e.g., ipfs://bafkreigkka6xfe3hb2tzcfqgm5clszs7oy7mct2awawivoxddcq6v3g5oi",
+			}),
+			{
+				status: 400,
+			},
+		)
+	}
+
+	const getCalldata = Effect.gen(function* () {
+		return yield* getPublishEditCalldata(spaceId, cid as string)
+	})
+
+	const calldata = await Effect.runPromise(Effect.either(getCalldata.pipe(Effect.provide(EnvironmentLive))))
+
+	if (Either.isLeft(calldata)) {
+		const error = calldata.left
+
+		switch (error._tag) {
+			case "ConfigError":
+				console.error("Invalid server config")
+				return new Response(
+					JSON.stringify({
+						message: "Invalid server config. Please notify the server administrator.",
+						reason: "Invalid server config. Please notify the server administrator.",
+					}),
+					{
+						status: 500,
+					},
+				)
+
+			default:
+				console.error(`Failed to generate calldata for edit. message: ${error.message} – cause: ${error.cause}`)
+
+				return new Response(
+					JSON.stringify({
+						message: `Failed to deploy space. message: ${error.message} – cause: ${error.cause}`,
+						reason: error.message,
+					}),
+					{
+						status: 500,
+					},
+				)
+		}
+	}
+
+	return Response.json(calldata.right)
+})
+
+// Exporting default the hono instance is the standard way of starting the server.
 export default app

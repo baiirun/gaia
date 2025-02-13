@@ -1,4 +1,5 @@
 import type {Chain} from "viem"
+import {EnvironmentLiveRaw} from "./config"
 
 export const GEOGENESIS: Chain = {
 	id: 19411, // or 80451 for mainnet
@@ -10,10 +11,10 @@ export const GEOGENESIS: Chain = {
 	},
 	rpcUrls: {
 		default: {
-			http: [process.env.RPC_ENDPOINT!],
+			http: [EnvironmentLiveRaw.RPC_ENDPOINT],
 		},
 		public: {
-			http: [process.env.RPC_ENDPOINT!],
+			http: [EnvironmentLiveRaw.RPC_ENDPOINT],
 		},
 	},
 }

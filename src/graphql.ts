@@ -12,10 +12,6 @@ class GraphqlRuntimeError extends Error {
 	readonly _tag = "GraphqlRuntimeError"
 }
 
-class AbortError {
-	readonly _tag = "AbortError"
-}
-
 interface GraphqlConfig {
 	endpoint: string
 	query: string
@@ -40,10 +36,6 @@ export function graphql<T>({endpoint, query, signal, tag}: GraphqlConfig) {
 				signal,
 			}),
 		catch: (e) => {
-			if (e instanceof Error && e.name === "AbortError") {
-				return new AbortError()
-			}
-
 			return new HttpError()
 		},
 	})

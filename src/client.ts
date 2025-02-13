@@ -3,18 +3,19 @@ import {privateKeyToAccount} from "viem/accounts"
 import {providers} from "ethers"
 import type {WalletClient} from "viem"
 import {GEOGENESIS} from "./chain"
+import {EnvironmentLiveRaw} from "./config"
 
 const geoAccount = privateKeyToAccount(process.env.DEPLOYER_PK as `0x${string}`)
 
 export const walletClient = createWalletClient({
 	account: geoAccount,
 	chain: GEOGENESIS,
-	transport: http(process.env.RPC_ENDPOINT!, {batch: true}),
+	transport: http(EnvironmentLiveRaw.RPC_ENDPOINT, {batch: true}),
 })
 
 export const publicClient = createPublicClient({
 	chain: GEOGENESIS,
-	transport: http(process.env.RPC_ENDPOINT!, {batch: true}),
+	transport: http(EnvironmentLiveRaw.RPC_ENDPOINT, {batch: true}),
 })
 
 export const signer = walletClientToSigner(walletClient)
