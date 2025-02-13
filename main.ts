@@ -161,6 +161,18 @@ app.post("/space/:spaceId/edit/calldata", async (c) => {
 		}
 	}
 
+	if (calldata.right === null) {
+		return new Response(
+			JSON.stringify({
+				error: "Failed to generate calldata",
+				reason: `Could not find space with id ${spaceId}. Make sure it exists on the network ${network}.`,
+			}),
+			{
+				status: 500,
+			},
+		)
+	}
+
 	return Response.json(calldata.right)
 })
 

@@ -28,7 +28,7 @@ type NetworkResult = {
 		mainVotingPluginAddress: string | null
 		memberAccessPluginAddress: string | null
 		personalSpaceAdminPluginAddress: string | null
-	}
+	} | null
 }
 
 export function getPublishEditCalldata(spaceId: string, cid: string, network: "TESTNET" | "MAINNET") {
@@ -40,6 +40,10 @@ export function getPublishEditCalldata(spaceId: string, cid: string, network: "T
 			endpoint,
 			query: query(spaceId),
 		})
+
+		if (!result.space) {
+			return null
+		}
 
 		const calldata = encodeFunctionData({
 			functionName: "submitEdits",
