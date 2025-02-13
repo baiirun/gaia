@@ -292,8 +292,6 @@ async function* createDao(params: CreateGeoDaoParams, context: ContextParams) {
 		throw new MissingExecPermissionError()
 	}
 
-	console.log("plugin installation data", pluginInstallationData)
-
 	// We use viem as we run into unexpected "unknown account" errors when using ethers to
 	// write the tx using the geo signer.
 	// @TODO can this just be a smart account client?
