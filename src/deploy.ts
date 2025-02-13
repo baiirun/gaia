@@ -314,8 +314,6 @@ async function* createDao(params: CreateGeoDaoParams, context: ContextParams) {
 		}),
 	})
 
-	console.log("hash", hash)
-
 	// Commenting out the original implementation of DAO deployment. See the original here:
 	// https://github.com/aragon/sdk/blob/36647d5d27ddc74b62892f829fec60e115a2f9be/modules/client/src/internal/client/methods.ts#L190
 	// const tx = await daoFactoryInstance.connect(signer).createDao(
