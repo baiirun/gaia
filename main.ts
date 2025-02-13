@@ -39,8 +39,6 @@ app.get("/space/deploy", async (c) => {
 		)
 	}
 
-	console.log("data", {initialEditorAddress, spaceName})
-
 	const deployWithRetry = Effect.retry(
 		deploySpace({
 			initialEditorAddress,
@@ -62,17 +60,31 @@ app.get("/space/deploy", async (c) => {
 
 	return Either.match(result, {
 		onLeft: (error) => {
-			console.error(`Failed to deploy space. message: ${error.message} – cause: ${error.cause}`)
+			switch (error._tag) {
+				case "ConfigError":
+					console.error("Invalid server config")
+					return new Response(
+						JSON.stringify({
+							message: "Invalid server config. Please notify the server administrator.",
+							reason: "Invalid server config. Please notify the server administrator.",
+						}),
+						{
+							status: 500,
+						},
+					)
+				default:
+					console.error(`Failed to deploy space. message: ${error.message} – cause: ${error.cause}`)
 
-			return new Response(
-				JSON.stringify({
-					message: `Failed to deploy space. message: ${error.message} – cause: ${error.cause}`,
-					reason: error.message,
-				}),
-				{
-					status: 500,
-				},
-			)
+					return new Response(
+						JSON.stringify({
+							message: `Failed to deploy space. message: ${error.message} – cause: ${error.cause}`,
+							reason: error.message,
+						}),
+						{
+							status: 500,
+						},
+					)
+			}
 		},
 		onRight: (spaceId) => {
 			return Response.json({spaceId})
