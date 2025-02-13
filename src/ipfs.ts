@@ -1,7 +1,26 @@
-import {Effect, Either} from "effect"
+import {Duration, Effect, Either, Schedule} from "effect"
 import {Environment, EnvironmentLive} from "./config"
 import type {BlankEnv, BlankInput} from "hono/types"
 import type {Context} from "hono"
+
+class CidValidateError extends Error {
+	readonly _tag = "CidValidateError"
+}
+
+function validateCid(cid: string) {
+	return Effect.gen(function* () {
+		const [, cidContains] = cid.split("ipfs://")
+		if (!cid.startsWith("ipfs://")) {
+			yield* Effect.fail(new CidValidateError(`CID ${cid} does not start with ipfs://`))
+		}
+
+		if (cidContains === undefined || cidContains === "") {
+			yield* Effect.fail(new CidValidateError(`CID ${cid} is not valid`))
+		}
+
+		return true
+	})
+}
 
 export async function uploadEdit(c: Context<BlankEnv, "/ipfs/upload-edit", BlankInput>) {
 	const formData = await c.req.formData()
@@ -19,16 +38,28 @@ export async function uploadEdit(c: Context<BlankEnv, "/ipfs/upload-edit", Blank
 		formData.append("file", blob)
 
 		yield* Effect.logInfo("[IPFS][binary] Uploading content...")
-		// @TODO: validate hash and retry
 		const hash = yield* upload(formData, config.IPFS_GATEWAY_WRITE)
+		yield* Effect.logInfo("[IPFS][binary] Validating CID")
+		yield* validateCid(hash)
 		yield* Effect.logInfo("[IPFS][binary] Uploaded to IPFS successfully")
 
 		return {
-			cid: hash,
+			cid: hash as `ipfs://${string}`,
 		}
 	}).pipe(Effect.provide(EnvironmentLive))
 
-	const result = await Effect.runPromise(Effect.either(run))
+	const result = await Effect.runPromise(
+		Effect.either(
+			Effect.retry(run, {
+				schedule: Schedule.exponential("100 millis").pipe(
+					Schedule.jittered,
+					Schedule.compose(Schedule.elapsed),
+					Schedule.tapInput(() => Effect.succeed(console.log("[IPFS][upload] Retrying"))),
+					Schedule.whileOutput(Duration.lessThanOrEqualTo(Duration.seconds(30))),
+				),
+			}),
+		),
+	)
 
 	if (Either.isLeft(result)) {
 		return new Response("Failed to upload file", {status: 500})
