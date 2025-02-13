@@ -14,7 +14,7 @@ app.get("/health", (c) => {
 app.post("/ipfs/upload-edit", Ipfs.uploadEdit)
 app.post("/ipfs/upload-file", Ipfs.uploadFile)
 
-app.post("/space/deploy", async (c) => {
+app.post("/deploy", async (c) => {
 	const {initialEditorAddress, spaceName} = await c.req.json()
 
 	if (initialEditorAddress === null || spaceName === null) {
