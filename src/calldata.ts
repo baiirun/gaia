@@ -28,17 +28,22 @@ type NetworkResult = {
 		mainVotingPluginAddress: string | null
 		memberAccessPluginAddress: string | null
 		personalSpaceAdminPluginAddress: string | null
-	}
+	} | null
 }
 
-export function getPublishEditCalldata(spaceId: string, cid: string) {
+export function getPublishEditCalldata(spaceId: string, cid: string, network: "TESTNET" | "MAINNET") {
 	return Effect.gen(function* () {
 		const config = yield* Environment
+		const endpoint = network === "TESTNET" ? config.API_ENDPOINT_TESTNET : config.API_ENDPOINT_MAINNET
 
 		const result = yield* graphql<NetworkResult>({
-			endpoint: config.API_ENDPOINT,
+			endpoint,
 			query: query(spaceId),
 		})
+
+		if (!result.space) {
+			return null
+		}
 
 		const calldata = encodeFunctionData({
 			functionName: "submitEdits",
