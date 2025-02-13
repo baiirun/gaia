@@ -42,7 +42,7 @@ app.post("/deploy", async (c) => {
 			schedule: Schedule.exponential(Duration.millis(100)).pipe(
 				Schedule.jittered,
 				Schedule.compose(Schedule.elapsed),
-				Schedule.whileOutput(Duration.lessThanOrEqualTo(Duration.minutes(3))),
+				Schedule.whileOutput(Duration.lessThanOrEqualTo(Duration.minutes(1))),
 			),
 			while: (error) => error._tag !== "WaitForSpaceToBeIndexedError",
 		},

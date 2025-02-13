@@ -16,17 +16,19 @@ import type {OmitStrict} from "./types"
 import {SupportedNetworks} from "@aragon/osx-commons-configs"
 import {providers} from "ethers"
 import {upload} from "./ipfs"
-import {Environment} from "./config"
+import {Environment, EnvironmentLiveRaw} from "./config"
 import {graphql} from "./graphql"
 import {DaoCreationError, MissingExecPermissionError} from "@aragon/sdk-client-common"
 import {id} from "@ethersproject/hash"
 import {getPublicClient, getSigner, getWalletClient} from "./client"
 
 const getDeployParams = (network: "TESTNET" | "MAINNET") => {
+	const rpcEndpoint =
+		network === "TESTNET" ? EnvironmentLiveRaw.RPC_ENDPOINT_TESTNET : EnvironmentLiveRaw.RPC_ENDPOINT_MAINNET
 	return {
 		network: SupportedNetworks.LOCAL, // I don't think this matters but is required by Aragon SDK
 		signer: getSigner(network),
-		web3Providers: new providers.JsonRpcProvider(process.env.RPC_ENDPOINT),
+		web3Providers: new providers.JsonRpcProvider(rpcEndpoint),
 		DAOFactory: TESTNET.DAO_FACTORY_ADDRESS,
 		ENSRegistry: TESTNET.ENS_REGISTRY_ADDRESS,
 	}
@@ -140,7 +142,7 @@ export function deploySpace(args: DeployArgs) {
 		yield* Effect.logInfo("Waiting for DAO to be indexed into a space").pipe(Effect.annotateLogs({dao: dao.dao}))
 		const waitResult = yield* Effect.tryPromise({
 			try: async () => {
-				const result = await waitForSpaceToBeIndexed(dao.dao)
+				const result = await waitForSpaceToBeIndexed(dao.dao, network)
 				return result
 			},
 			catch: (e) => new WaitForSpaceToBeIndexedError(`Failed waiting for space to be indexed: ${e}`),
@@ -177,8 +179,9 @@ const query = (daoAddress: string) => ` {
   }
 }`
 
-async function waitForSpaceToBeIndexed(daoAddress: string) {
-	const endpoint = process.env.API_ENDPOINT!
+async function waitForSpaceToBeIndexed(daoAddress: string, network: "TESTNET" | "MAINNET") {
+	const endpoint =
+		network === "TESTNET" ? EnvironmentLiveRaw.API_ENDPOINT_TESTNET : EnvironmentLiveRaw.API_ENDPOINT_MAINNET
 
 	const graphqlFetchEffect = graphql<{
 		spaces: {nodes: {id: string; spacesMetadatum: {version: {entityId: string}}}[]}
