@@ -19,7 +19,7 @@ app.post("/deploy", async (c) => {
 
 	if (initialEditorAddress === null || spaceName === null) {
 		console.error(
-			`Missing required parameters to deploy a space ${JSON.stringify({initialEditorAddress, spaceName})}`,
+			`[SPACE][deploy] Missing required parameters to deploy a space ${JSON.stringify({initialEditorAddress, spaceName})}`,
 		)
 
 		return new Response(
@@ -56,7 +56,7 @@ app.post("/deploy", async (c) => {
 		onLeft: (error) => {
 			switch (error._tag) {
 				case "ConfigError":
-					console.error("Invalid server config")
+					console.error("[SPACE][deploy] Invalid server config")
 					return new Response(
 						JSON.stringify({
 							message: "Invalid server config. Please notify the server administrator.",
@@ -67,7 +67,9 @@ app.post("/deploy", async (c) => {
 						},
 					)
 				default:
-					console.error(`Failed to deploy space. message: ${error.message} – cause: ${error.cause}`)
+					console.error(
+						`[SPACE][deploy] Failed to deploy space. message: ${error.message} – cause: ${error.cause}`,
+					)
 
 					return new Response(
 						JSON.stringify({
@@ -88,9 +90,10 @@ app.post("/deploy", async (c) => {
 
 app.post("/space/:spaceId/edit/calldata", async (c) => {
 	const {spaceId} = c.req.param()
-	const {cid} = await c.req.json()
+	let {cid, network} = await c.req.json()
 
 	if (!cid || !cid.startsWith("ipfs://")) {
+		console.error(`[SPACE][calldata] Invalid CID ${cid}`)
 		return new Response(
 			JSON.stringify({
 				error: "Missing required parameters",
@@ -102,8 +105,25 @@ app.post("/space/:spaceId/edit/calldata", async (c) => {
 		)
 	}
 
+	if (!network) {
+		network = "MAINNET"
+	}
+
+	if (network !== "TESTNET" && network !== "MAINNET") {
+		console.error(`[SPACE][calldata] Invalid network ${network}`)
+		return new Response(
+			JSON.stringify({
+				error: "Invalid network",
+				reason: "Invalid network. Please use 'TESTNET' or 'MAINNET'.",
+			}),
+			{
+				status: 400,
+			},
+		)
+	}
+
 	const getCalldata = Effect.gen(function* () {
-		return yield* getPublishEditCalldata(spaceId, cid as string)
+		return yield* getPublishEditCalldata(spaceId, cid as string, network)
 	})
 
 	const calldata = await Effect.runPromise(Effect.either(getCalldata.pipe(Effect.provide(EnvironmentLive))))
@@ -113,7 +133,7 @@ app.post("/space/:spaceId/edit/calldata", async (c) => {
 
 		switch (error._tag) {
 			case "ConfigError":
-				console.error("Invalid server config")
+				console.error("[SPACE][calldata] Invalid server config")
 				return new Response(
 					JSON.stringify({
 						message: "Invalid server config. Please notify the server administrator.",
@@ -125,7 +145,9 @@ app.post("/space/:spaceId/edit/calldata", async (c) => {
 				)
 
 			default:
-				console.error(`Failed to generate calldata for edit. message: ${error.message} – cause: ${error.cause}`)
+				console.error(
+					`[SPACE][calldata] Failed to generate calldata for edit. message: ${error.message} – cause: ${error.cause}`,
+				)
 
 				return new Response(
 					JSON.stringify({
