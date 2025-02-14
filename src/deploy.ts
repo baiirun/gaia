@@ -57,7 +57,7 @@ export function deploySpace(args: DeployArgs) {
 		yield* Effect.logInfo("Deploying space")
 		const initialEditorAddress = getChecksumAddress(args.initialEditorAddress)
 
-		const spaceEntityId = ID.make()
+		const spaceEntityId = ID.generate()
 
 		const ops = [
 			Relation.make({
