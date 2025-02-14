@@ -130,7 +130,10 @@ export function deploySpace(args: DeployArgs) {
 
 				return {dao, pluginAddresses}
 			},
-			catch: (e) => new DeployDaoError(`Failed creating DAO: ${e}`),
+			catch: (e) => {
+				console.error(`Failed creating DAO: ${e}`)
+				return new DeployDaoError(`Failed creating DAO: ${e}`)
+			},
 		})
 
 		yield* Effect.logInfo("Deployed DAO successfully!").pipe(
