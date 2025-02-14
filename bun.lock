@@ -10,7 +10,7 @@
         "@aragon/sdk-client-common": "^1.17.0",
         "@ethersproject/hash": "^5.7.0",
         "@ethersproject/providers": "^5.7.2",
-        "@graphprotocol/grc-20": "^0.2.3",
+        "@graphprotocol/grc-20": "^0.3.0",
         "effect": "^3.12.7",
         "ethers": "5.7.2",
         "hono": "^4.7.0",
@@ -200,7 +200,7 @@
 
     "@ethersproject/wordlists": ["@ethersproject/wordlists@5.7.0", "", { "dependencies": { "@ethersproject/bytes": "^5.7.0", "@ethersproject/hash": "^5.7.0", "@ethersproject/logger": "^5.7.0", "@ethersproject/properties": "^5.7.0", "@ethersproject/strings": "^5.7.0" } }, "sha512-S2TFNJNfHWVHNE6cNDjbVlZ6MgE17MIxMbMg2zv3wn+3XSJGosL1m9ZVv3GXCf/2ymSsQ+hRI5IzoMJTG6aoVA=="],
 
-    "@graphprotocol/grc-20": ["@graphprotocol/grc-20@0.2.3", "", { "dependencies": { "@biomejs/biome": "^1.9.4", "@bufbuild/protobuf": "^1.9.0", "@changesets/cli": "^2.27.12", "@ethersproject/abi": "^5.6.4", "@ethersproject/providers": "^5.6.8", "@types/uuid": "^9.0.8", "effect": "^3.12.11", "ethers": "^5.7.2", "position-strings": "^2.0.1", "uuid": "^9.0.0", "viem": "^1.16.0", "vite": "^5.2.11", "vitest": "^1.6.0" } }, "sha512-OqnzLvB8KmE3oiFXab2Cuh1G2XSN7B7BZdYd7IcbwoX+csgL/U09O3V8VqKrNPDcyPd8U0Xq5q1UIiNVZJRsVQ=="],
+    "@graphprotocol/grc-20": ["@graphprotocol/grc-20@0.3.0", "", { "dependencies": { "@biomejs/biome": "^1.9.4", "@bufbuild/protobuf": "^1.9.0", "@changesets/cli": "^2.27.12", "@ethersproject/abi": "^5.6.4", "@ethersproject/providers": "^5.6.8", "@types/uuid": "^9.0.8", "effect": "^3.12.11", "ethers": "^5.7.2", "position-strings": "^2.0.1", "uuid": "^9.0.0", "viem": "^1.16.0", "vite": "^5.2.11", "vitest": "^1.6.0" } }, "sha512-nnZQ71mSK+NOnu4h2SoPsxDCz+vu/2Y1q/PePlb6phfIqEo4gww753I4ssYug+gHVMWC5gJb1AXYKCce5PNcJw=="],
 
     "@jest/schemas": ["@jest/schemas@29.6.3", "", { "dependencies": { "@sinclair/typebox": "^0.27.8" } }, "sha512-mo5j5X+jIZmJQveBKeS/clAueipV7KgiX1vMgCxam1RNYiqE1w62n0/tJJnHtjW8ZHcQco5gY85jA3mi0L+nSA=="],
 
