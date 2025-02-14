@@ -21,7 +21,7 @@
 		"@aragon/sdk-client-common": "^1.17.0",
 		"@ethersproject/hash": "^5.7.0",
 		"@ethersproject/providers": "^5.7.2",
-		"@graphprotocol/grc-20": "^0.2.0",
+		"@graphprotocol/grc-20": "^0.2.3",
 		"effect": "^3.12.7",
 		"ethers": "5.7.2",
 		"hono": "^4.7.0",
