@@ -7,6 +7,7 @@ import {EnvironmentLiveRaw} from "./config"
 
 const geoAccount = privateKeyToAccount(process.env.DEPLOYER_PK as `0x${string}`)
 
+//
 export const getWalletClient = (network: "TESTNET" | "MAINNET") => {
 	const rpcEndpoint =
 		network === "TESTNET" ? EnvironmentLiveRaw.RPC_ENDPOINT_TESTNET : EnvironmentLiveRaw.RPC_ENDPOINT_MAINNET
