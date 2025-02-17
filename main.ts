@@ -4,8 +4,11 @@ import {Duration, Effect, Either, Schedule} from "effect"
 import {deploySpace} from "./src/deploy"
 import {EnvironmentLive} from "./src/config"
 import {getPublishEditCalldata} from "./src/calldata"
+import { cors } from 'hono/cors'
 
 const app = new Hono()
+
+app.use("*", cors())
 
 app.get("/health", (c) => {
 	return c.json({healthy: true})
