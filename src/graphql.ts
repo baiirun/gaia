@@ -15,8 +15,6 @@ class GraphqlRuntimeError extends Error {
 interface GraphqlConfig {
 	endpoint: string
 	query: string
-	tag?: string
-	signal?: AbortController["signal"]
 }
 
 interface GraphqlResponse<T> {
@@ -24,7 +22,7 @@ interface GraphqlResponse<T> {
 	errors: unknown[]
 }
 
-export function graphql<T>({endpoint, query, signal, tag}: GraphqlConfig) {
+export function graphql<T>({endpoint, query}: GraphqlConfig) {
 	const graphqlFetchEffect = Effect.tryPromise({
 		try: () =>
 			fetch(endpoint, {
@@ -33,7 +31,6 @@ export function graphql<T>({endpoint, query, signal, tag}: GraphqlConfig) {
 					"Content-Type": "application/json",
 				},
 				body: JSON.stringify({query}),
-				signal,
 			}),
 		catch: (e) => {
 			return new HttpError()

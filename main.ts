@@ -4,7 +4,8 @@ import {Duration, Effect, Either, Schedule} from "effect"
 import {deploySpace} from "./src/deploy"
 import {EnvironmentLive} from "./src/config"
 import {getPublishEditCalldata} from "./src/calldata"
-import { cors } from 'hono/cors'
+import {cors} from "hono/cors"
+import {fuzzySearch} from "./src/fuzzy"
 
 const app = new Hono()
 
@@ -12,6 +13,60 @@ app.use("*", cors())
 
 app.get("/health", (c) => {
 	return c.json({healthy: true})
+})
+
+app.get("/search", async (c) => {
+	const query = await c.req.query("q")
+	console.log("query", query)
+
+	if (!query) {
+		return new Response(
+			JSON.stringify({
+				error: "Missing required parameters",
+				reason: "A query parameter is required for fuzzy search. e.g., `/search?q=foo`",
+			}),
+			{
+				status: 400,
+			},
+		)
+	}
+
+	const result = await Effect.runPromise(Effect.either(fuzzySearch(query).pipe(Effect.provide(EnvironmentLive))))
+
+	return Either.match(result, {
+		onLeft: (error) => {
+			switch (error._tag) {
+				case "ConfigError":
+					console.error("[SEARCH] Invalid server config")
+					return new Response(
+						JSON.stringify({
+							message: "Invalid server config. Please notify the server administrator.",
+							reason: "Invalid server config. Please notify the server administrator.",
+						}),
+						{
+							status: 500,
+						},
+					)
+				default:
+					console.error(
+						`[SEARCH] Failed to search with query ${query}. message: ${error.message} – cause: ${error.cause}`,
+					)
+
+					return new Response(
+						JSON.stringify({
+							message: `[SEARCH] Failed to search with query ${query}. message: ${error.message} – cause: ${error.cause}`,
+							reason: error.message,
+						}),
+						{
+							status: 500,
+						},
+					)
+			}
+		},
+		onRight: (results) => {
+			return Response.json({results})
+		},
+	})
 })
 
 app.post("/ipfs/upload-edit", Ipfs.uploadEdit)
