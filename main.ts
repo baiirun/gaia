@@ -17,7 +17,6 @@ app.get("/health", (c) => {
 
 app.get("/search", async (c) => {
 	const query = await c.req.query("q")
-	console.log("query", query)
 
 	if (!query) {
 		return new Response(
