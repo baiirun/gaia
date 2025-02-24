@@ -48,20 +48,26 @@ type NetworkResult = {
 	}
 }
 
-export function fuzzySearch(query: string) {
+export function fuzzySearch(query: string, network?: string) {
 	return Effect.gen(function* () {
 		const config = yield* Environment
 
+		let endpoint = config.API_ENDPOINT_MAINNET
+
+		if (network === "TESTNET") {
+			endpoint = config.API_ENDPOINT_TESTNET
+		}
+
 		const result = yield* graphql<NetworkResult>({
-			endpoint: config.API_ENDPOINT_TESTNET,
+			endpoint: endpoint,
 			query: getSearchQuery(query),
 		})
 
-		return result.searchEntitiesFuzzy.nodes.map(e => {
+		return result.searchEntitiesFuzzy.nodes.map((e) => {
 			return {
 				id: e.id,
 				name: e.name,
-				types: e.currentVersion.version.versionTypes.nodes.map(v => {
+				types: e.currentVersion.version.versionTypes.nodes.map((v) => {
 					return {
 						id: v.type.entityId,
 						name: v.type.name,

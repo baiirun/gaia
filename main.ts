@@ -17,6 +17,7 @@ app.get("/health", (c) => {
 
 app.get("/search", async (c) => {
 	const query = await c.req.query("q")
+	const network = await c.req.query("network")
 
 	if (!query) {
 		return new Response(
@@ -30,7 +31,19 @@ app.get("/search", async (c) => {
 		)
 	}
 
-	const result = await Effect.runPromise(Effect.either(fuzzySearch(query).pipe(Effect.provide(EnvironmentLive))))
+	if (network && !["TESTNET", "MAINNET"].includes(network)) {
+		return new Response(
+			JSON.stringify({
+				error: "Invalid network",
+				reason: "Invalid network. Please use 'TESTNET' or 'MAINNET'. Defaults to MAINNET",
+			}),
+			{
+				status: 400,
+			},
+		)
+	}
+
+	const result = await Effect.runPromise(Effect.either(fuzzySearch(query, network).pipe(Effect.provide(EnvironmentLive))))
 
 	return Either.match(result, {
 		onLeft: (error) => {
