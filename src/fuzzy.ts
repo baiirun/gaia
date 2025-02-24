@@ -8,6 +8,19 @@ const getSearchQuery = (query: string) => `
       nodes {
         id
         name
+
+				currentVersion {
+					version {
+						versionTypes {
+							nodes {
+								type {
+									entityId
+									name
+								}
+							}
+						}
+					}
+				}
       }
     }
   }
@@ -18,6 +31,19 @@ type NetworkResult = {
 		nodes: {
 			id: string
 			name: string
+
+			currentVersion: {
+				version: {
+					versionTypes: {
+						nodes: {
+							type: {
+								entityId: string
+								name: string
+							}
+						}[]
+					}
+				}
+			}
 		}[]
 	}
 }
@@ -31,6 +57,17 @@ export function fuzzySearch(query: string) {
 			query: getSearchQuery(query),
 		})
 
-		return result.searchEntitiesFuzzy.nodes
+		return result.searchEntitiesFuzzy.nodes.map(e => {
+			return {
+				id: e.id,
+				name: e.name,
+				types: e.currentVersion.version.versionTypes.nodes.map(v => {
+					return {
+						id: v.type.entityId,
+						name: v.type.name,
+					}
+				}),
+			}
+		})
 	})
 }
