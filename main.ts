@@ -43,7 +43,9 @@ app.get("/search", async (c) => {
 		)
 	}
 
-	const result = await Effect.runPromise(Effect.either(fuzzySearch(query, network).pipe(Effect.provide(EnvironmentLive))))
+	const result = await Effect.runPromise(
+		Effect.either(fuzzySearch(query, network).pipe(Effect.provide(EnvironmentLive))),
+	)
 
 	return Either.match(result, {
 		onLeft: (error) => {
@@ -85,7 +87,7 @@ app.post("/ipfs/upload-edit", Ipfs.uploadEdit)
 app.post("/ipfs/upload-file", Ipfs.uploadFile)
 
 app.post("/deploy", async (c) => {
-	const {initialEditorAddress, spaceName} = await c.req.json()
+	const {initialEditorAddress, spaceName, network = "MAINNET"} = await c.req.json()
 
 	if (initialEditorAddress === null || spaceName === null) {
 		console.error(
@@ -107,6 +109,7 @@ app.post("/deploy", async (c) => {
 		deploySpace({
 			initialEditorAddress,
 			spaceName,
+			network,
 		}).pipe(Effect.provide(EnvironmentLive)),
 		{
 			schedule: Schedule.exponential(Duration.millis(100)).pipe(
