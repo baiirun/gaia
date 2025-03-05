@@ -1,8 +1,8 @@
+import {MainVotingAbi, PersonalSpaceAdminAbi} from "@graphprotocol/grc-20/abis"
 import {Effect} from "effect"
+import {encodeFunctionData, stringToHex} from "viem"
 import {Environment} from "./config"
 import {graphql} from "./graphql"
-import {encodeFunctionData} from "viem"
-import {PersonalSpaceAdminAbi} from "@graphprotocol/grc-20/abis"
 
 const query = (spaceId: string) => {
 	return `
@@ -45,15 +45,32 @@ export function getPublishEditCalldata(spaceId: string, cid: string, network: "T
 			return null
 		}
 
-		const calldata = encodeFunctionData({
-			functionName: "submitEdits",
-			abi: PersonalSpaceAdminAbi,
-			args: [cid, result.space.spacePluginAddress as `0x${string}`],
-		})
+		if (result.space.type === "PERSONAL") {
+			const calldata = encodeFunctionData({
+				functionName: "submitEdits",
+				abi: PersonalSpaceAdminAbi,
+				args: [cid, result.space.spacePluginAddress as `0x${string}`],
+			})
 
-		return {
-			to: result.space.personalSpaceAdminPluginAddress,
-			data: calldata,
+			return {
+				to: result.space.personalSpaceAdminPluginAddress,
+				data: calldata,
+			}
 		}
+
+		if (result.space.type === "PUBLIC") {
+			const calldata = encodeFunctionData({
+				functionName: "proposeEdits",
+				abi: MainVotingAbi,
+				args: [stringToHex(cid), cid, result.space.spacePluginAddress as `0x${string}`],
+			})
+
+			return {
+				to: result.space.mainVotingPluginAddress as `0x${string}`,
+				data: calldata,
+			}
+		}
+
+		return null
 	})
 }
