@@ -1,6 +1,6 @@
 import {Effect} from "effect"
-import {graphql} from "./graphql"
 import {Environment} from "./config"
+import {graphql} from "./graphql"
 
 const getSearchQuery = (query: string) => `
   query {
@@ -11,6 +11,11 @@ const getSearchQuery = (query: string) => `
 
 				currentVersion {
 					version {
+						versionSpaces {
+							nodes {
+								spaceId
+							}
+						}
 						versionTypes {
 							nodes {
 								type {
@@ -34,6 +39,11 @@ type NetworkResult = {
 
 			currentVersion: {
 				version: {
+					versionSpaces: {
+						nodes: {
+							spaceId: string
+						}[]
+					}
 					versionTypes: {
 						nodes: {
 							type: {
@@ -71,6 +81,12 @@ export function fuzzySearch(query: string, network?: string) {
 					return {
 						id: v.type.entityId,
 						name: v.type.name,
+					}
+				}),
+
+				spaces: e.currentVersion.version.versionSpaces.nodes.map((v) => {
+					return {
+						id: v.spaceId
 					}
 				}),
 			}
